@@ -63,6 +63,7 @@ public class Controller {
 	private void saveWithOptionalDiscount() {
 		double subtotal = totalAmount();
 		double finalAmount = 0;
+		double totalcft = 0;
 		
 		//ask customer name -
 		customerName = JOptionPane.showInputDialog(view.frame, "Enter Customer Name:");
@@ -76,6 +77,7 @@ public class Controller {
 		
 		discount = 0;
 		finalAmount = subtotal;
+		totalcft = totalCFT();
 		
 		int option = JOptionPane.showConfirmDialog(view.frame, "Subtotal is ₹" + 
 		String.format("%.2f", subtotal) + "\nDo you want to apply a discount?", 
@@ -103,14 +105,15 @@ public class Controller {
 	        JOptionPane.showMessageDialog(view.frame,
 	                "Transaction saved successfully!\n" +
 	                "Customer: " + customerName + "\n" +
+	                String.format("Total CFT: %.2f\n", totalcft) +
 	                (discount > 0 ? "Discount: ₹" + String.format("%.2f", discount) + "\n" : "") +
 	                "Final Total: ₹" + String.format("%.2f", finalAmount),
 	                "Success", JOptionPane.INFORMATION_MESSAGE);
-	        
-	        //calling the invoice generator here
-	        InvoiceGenerator.generateInvoice(customerId, customerName, entries, subtotal, discount, finalAmount);
-	        
-	        // Reset for next customer
+
+	        // ✅ Corrected this line
+	        InvoiceGenerator.generateInvoice(customerId, customerName, entries, subtotal, discount, finalAmount, totalcft);
+
+	        // ♻️ Reset after saving
 	        entries.clear();
 	        view.clearTable();
 	        serial = 1;
@@ -118,6 +121,7 @@ public class Controller {
 	    } else {
 	        view.showError("Failed to save transaction to database.");
 	    }
+
 	}
 	
 	private double totalAmount() {
@@ -127,12 +131,22 @@ public class Controller {
 		}
 		return total;
 	}
+	//private double totalcft = 0;
+	private  double totalCFT() {
+		double total = 0;
+		for(WoodEntry e : entries) {
+			total += e.getCFT();
+		}
+		//totalcft = total;
+		return total;
+	}
 	
 	private void updateTotal() {
 		double total = totalAmount();
+		double totalcft = totalCFT();
 		/*for(WoodEntry e : entries) {
 			total += e.getCost();
 		}*/
-		view.updateTotal(total, entries.size());
+		view.updateTotal(total, totalcft);
 	}
 }

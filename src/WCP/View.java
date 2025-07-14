@@ -123,7 +123,7 @@ public class View {
         //Total calculated panel
         totalPanel = new JPanel();
         totalPanel.setBackground(Color.CYAN);
-        totalLabel = new JLabel("Total Logs : 0  |  Total Amount: ₹0.00");
+        totalLabel = new JLabel("Total CFT : 0  |  Total Amount: ₹0.00");
 		totalLabel.setFont(new Font("SansSerif", Font.BOLD, 20));
         totalPanel.add(totalLabel);
         footer.add(totalPanel, BorderLayout.SOUTH);
@@ -174,8 +174,8 @@ They help the Controller class get input values from the View.
 	}
 	
 	//To update total Amount-
-	public void updateTotal(double total, int count) {
-	totalLabel.setText(String.format("Total Logs: %d  |  Total Amount: ₹%.2f", count, total));
+	public void updateTotal(double total, double count) {
+	totalLabel.setText(String.format("Total CFT: %.2f  |  Total Amount: ₹%.2f", count, total));
 	}
 	
 	//to clear inputField after every entry

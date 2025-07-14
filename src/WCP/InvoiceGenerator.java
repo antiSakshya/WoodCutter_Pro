@@ -8,7 +8,8 @@ import java.util.List;
 
 public class InvoiceGenerator {
 
-    public static void generateInvoice(int customerId, String customerName, List<WoodEntry> entries, double subtotal, double discount, double finalAmount) {
+    public static void generateInvoice(int customerId, String customerName, List<WoodEntry> entries,
+                                       double subtotal, double discount, double finalAmount, double totalCFT) {
         Document document = new Document();
         try {
             String filename = "Invoice_" + customerId + "_" + customerName.replaceAll("\\s+", "_") + ".pdf";
@@ -28,14 +29,13 @@ public class InvoiceGenerator {
             document.add(new Paragraph("Date: " + java.time.LocalDate.now()));
             document.add(new Paragraph(" "));
 
-            // Table Header
+            // Entry Table
             PdfPTable table = new PdfPTable(6); // Sr, Length, Roundness, CFT, Rate, Amount
             table.setWidthPercentage(100);
             table.setSpacingBefore(10f);
             table.setSpacingAfter(10f);
 
             Font headerFont = new Font(Font.FontFamily.HELVETICA, 12, Font.BOLD);
-
             String[] headers = {"Sr No", "Length", "Roundness", "CFT", "Rate", "Amount"};
             for (String header : headers) {
                 PdfPCell cell = new PdfPCell(new Phrase(header, headerFont));
@@ -44,7 +44,6 @@ public class InvoiceGenerator {
                 table.addCell(cell);
             }
 
-            // Add entry rows
             int srNo = 1;
             for (WoodEntry entry : entries) {
                 table.addCell(String.valueOf(srNo++));
@@ -57,12 +56,23 @@ public class InvoiceGenerator {
 
             document.add(table);
 
-            // Total section
-            document.add(new Paragraph("Subtotal: ₹" + String.format("%.2f", subtotal)));
+            // Totals Table - Right aligned
+            PdfPTable totalsTable = new PdfPTable(2);
+            totalsTable.setWidthPercentage(40); // adjust width as needed
+            totalsTable.setHorizontalAlignment(Element.ALIGN_RIGHT);
+
+            Font labelFont = new Font(Font.FontFamily.HELVETICA, 12, Font.BOLD);
+            Font valueFont = new Font(Font.FontFamily.HELVETICA, 12);
+
+            // Add total rows
+            addTotalRow(totalsTable, "Total CFT", totalCFT, labelFont, valueFont);
+            addTotalRow(totalsTable, "Subtotal", subtotal, labelFont, valueFont);
             if (discount > 0) {
-                document.add(new Paragraph("Discount: ₹" + String.format("%.2f", discount)));
+                addTotalRow(totalsTable, "Discount", discount, labelFont, valueFont);
             }
-            document.add(new Paragraph("Final Total: ₹" + String.format("%.2f", finalAmount)));
+            addTotalRow(totalsTable, "Final Total", finalAmount, labelFont, valueFont);
+
+            document.add(totalsTable);
 
             document.close();
             System.out.println("Invoice generated: " + filename);
@@ -70,5 +80,22 @@ public class InvoiceGenerator {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    // Helper method for rows in totals table
+    private static void addTotalRow(PdfPTable table, String label, double amount, Font labelFont, Font valueFont) {
+        PdfPCell labelCell = new PdfPCell(new Phrase(label + ":", labelFont));
+        labelCell.setBorder(Rectangle.NO_BORDER);
+        labelCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+
+        PdfPCell valueCell = new PdfPCell(new Phrase(String.format("₹%.2f", amount), valueFont));
+        if (label.equals("Total CFT")) {
+            valueCell = new PdfPCell(new Phrase(String.format("%.2f", amount), valueFont)); // no ₹ for CFT
+        }
+        valueCell.setBorder(Rectangle.NO_BORDER);
+        valueCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+
+        table.addCell(labelCell);
+        table.addCell(valueCell);
     }
 }
